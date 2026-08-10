@@ -50,8 +50,7 @@ The tuned XGBoost model is served through a FastAPI backend that replicates the 
 
 ```
 .
-├── Credit_Card_Approval_Prediction_Production.ipynb   # clean, documented, reproducible pipeline (start here)
-├── Credit_Card_Approval_Prediction_Updated.ipynb      # original iterative analysis / working notes
+├── Credit_Card_Approval_Prediction_Production.ipynb   # full pipeline: EDA, leakage fix, modeling, cost analysis, SHAP
 ├── data/
 │   ├── application_record.csv
 │   └── credit_record.csv

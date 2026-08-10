@@ -1,2 +1,5 @@
 Credit_Card_Approval_Prediction.ipynb
 Credit_Card_Approval_Prediction_Updated.ipynb
+.DS_Store
+.ipynb_checkpoints__pycache__/
+*.pyc
