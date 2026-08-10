@@ -14,7 +14,14 @@ scaler = joblib.load("models/scaler.pkl")
 explainer = joblib.load("models/shap_explainer.pkl")
 feature_columns = joblib.load("models/feature_columns.pkl")
 
-THRESHOLD = 0.48
+# Cost-optimal decision threshold, chosen in the notebook by sweeping thresholds to
+# minimize expected cost under the FN/FP cost assumptions below. Loaded from the
+# training artifact rather than hardcoded so the API can never drift out of sync
+# with the deployed model.
+THRESHOLD = round(float(joblib.load("models/decision_threshold.pkl")), 2)
+
+FN_COST = 500  # approving an applicant who defaults
+FP_COST = 50   # rejecting an applicant who would have repaid
 
 @app.get("/")
 def health_check():
@@ -22,7 +29,7 @@ def health_check():
 
 @app.get("/threshold")
 def get_threshold():
-    return {"threshold": THRESHOLD, "fn_cost": 500, "fp_cost": 50}
+    return {"threshold": THRESHOLD, "fn_cost": FN_COST, "fp_cost": FP_COST}
 
 @app.post("/predict", response_model=PredictionOutput)
 def predict(applicant: ApplicantInput):
@@ -47,3 +54,10 @@ def predict(applicant: ApplicantInput):
             for f, v in top_drivers
         ]
     )
+
+
+if __name__ == "__main__":
+    # Allows `python main.py` in addition to `uvicorn main:app --reload`.
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)

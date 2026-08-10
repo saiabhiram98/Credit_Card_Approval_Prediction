@@ -7,7 +7,27 @@ API_URL = "http://localhost:8000"
 
 st.set_page_config(page_title="Credit Risk Decisioning", layout="wide")
 st.title("Credit Risk Decisioning Service")
-st.caption("Powered by XGBoost · Threshold: 0.48 · FN cost $500 · FP cost $50")
+
+
+@st.cache_data(ttl=60)
+def get_model_config():
+    """Read threshold/cost settings from the API so this caption can't drift
+    out of sync with the deployed model."""
+    try:
+        return requests.get(f"{API_URL}/threshold", timeout=5).json()
+    except requests.RequestException:
+        return None
+
+
+config = get_model_config()
+if config:
+    st.caption(
+        f"Powered by XGBoost · Threshold: {config['threshold']:.2f} · "
+        f"FN cost ${config['fn_cost']} · FP cost ${config['fp_cost']}"
+    )
+else:
+    st.caption("Powered by XGBoost")
+    st.warning(f"Could not reach the scoring API at {API_URL} — is the FastAPI server running?")
 
 with st.form("applicant_form"):
     st.subheader("Applicant Information")
