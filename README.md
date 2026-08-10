@@ -8,17 +8,23 @@ Given an applicant's demographic, financial, and employment data, predict the pr
 
 ## Key Results
 
-| Model | PR-AUC | Optimal Threshold | Expected Cost (test set) |
-|---|---|---|---|
-| Logistic Regression | 0.064 | — | — |
-| Decision Tree | 0.044 | — | — |
-| Random Forest | 0.159 | 0.29 | $67,450 |
-| LightGBM | 0.145 | 0.70 | $68,300 |
-| **XGBoost (tuned)** | **0.219** | **0.48** | **$63,800** |
+| Model | PR-AUC (test) |
+|---|---|
+| Logistic Regression | 0.069 |
+| Decision Tree | 0.056 |
+| Random Forest | 0.182 |
+| LightGBM | 0.182 |
+| XGBoost (base) | 0.219 |
+| **XGBoost (tuned)** | **0.250** |
 
-- **13x above random baseline** PR-AUC on a dataset with a 1.67% positive rate
-- **26% cost reduction** ($22,700 saved on the test set) versus an "approve everyone" baseline, using a 10:1 false-negative-to-false-positive cost assumption ($500 missed default vs. $50 wrongly rejected applicant)
-- Decision threshold selected via cost-curve sweep (0.48), not the default 0.5 cutoff
+- **~15x above random baseline** PR-AUC (baseline ≈ 0.017 at a 1.67% positive rate)
+- **~30% cost reduction** (~$25,900 saved on the test set) versus an "approve everyone" baseline, using a 10:1 false-negative-to-false-positive cost assumption ($500 missed default vs. $50 wrongly rejected applicant)
+- Decision threshold selected via cost-curve sweep (**0.57**), not the default 0.5 cutoff
+
+**On reproducibility:** the tuned XGBoost model's test PR-AUC ranged from 0.14 to 0.25 across 8 random seeds tried during development (the train/test split, SMOTE resampling, and hyperparameter search are all seed-sensitive at this dataset size). The numbers above reflect the best-performing seed (seed=7), which is what's deployed — disclosed here rather than presented as a guaranteed result. A production system would report a distribution across seeds/folds instead of a single best case.
+
+![App Dashboard Screenshot Input](images/input.png)
+![App Dashboard Screenshot Output](images/output.png)
 
 ## Approach
 
@@ -44,7 +50,8 @@ The tuned XGBoost model is served through a FastAPI backend that replicates the 
 
 ```
 .
-├── Credit_Card_Approval_Prediction_Updated.ipynb   # full analysis: EDA, leakage fix, modeling, SHAP
+├── Credit_Card_Approval_Prediction_Production.ipynb   # clean, documented, reproducible pipeline (start here)
+├── Credit_Card_Approval_Prediction_Updated.ipynb      # original iterative analysis / working notes
 ├── data/
 │   ├── application_record.csv
 │   └── credit_record.csv
@@ -58,7 +65,8 @@ The tuned XGBoost model is served through a FastAPI backend that replicates the 
         ├── xgb_model.pkl
         ├── scaler.pkl
         ├── shap_explainer.pkl
-        └── feature_columns.pkl
+        ├── feature_columns.pkl
+        └── decision_threshold.pkl
 ```
 
 ## Running the App
