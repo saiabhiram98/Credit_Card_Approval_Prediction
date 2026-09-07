@@ -1,11 +1,24 @@
-fastapi
-uvicorn
-xgboost
-lightgbm
-shap
-scikit-learn
-pandas
-numpy
-joblib
-streamlit
-requests
+# Dependencies for running BOTH interfaces locally:
+#   uvicorn main:app --reload        (FastAPI service)
+#   streamlit run streamlit_app.py   (UI)
+#
+# The Streamlit Community Cloud deployment uses the leaner list at the
+# repository root instead, since it does not run the API server.
+#
+# scikit-learn, xgboost and shap are pinned to the versions that CREATED the
+# artifacts in models/ — changing them risks unpickling failures. This exact
+# set was verified on Python 3.12 to reproduce the reference prediction.
+
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5
+
+streamlit==1.63.0
+matplotlib==3.11.1
+
+scikit-learn==1.5.1
+xgboost==3.3.0
+shap==0.52.0
+pandas==2.3.3
+numpy==2.5.3
+joblib==1.6.0
