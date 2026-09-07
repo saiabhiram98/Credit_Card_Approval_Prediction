@@ -1,0 +1,20 @@
+# Dependencies for the Streamlit Community Cloud deployment
+# (app entry point: credit_risk_api/streamlit_app.py).
+#
+# Only what the UI + scoring core need — FastAPI/uvicorn are deliberately
+# excluded here since Streamlit Cloud runs a single process. The API's own
+# dependencies live in credit_risk_api/requirements.txt.
+#
+# scikit-learn, xgboost and shap are pinned to the versions that CREATED the
+# artifacts in credit_risk_api/models/; changing them risks unpickling failures.
+# This exact set was verified to load the artifacts and reproduce the reference
+# prediction on Python 3.12.
+
+streamlit==1.63.0
+scikit-learn==1.5.1
+xgboost==3.3.0
+shap==0.52.0
+pandas==2.3.3
+numpy==2.5.3
+joblib==1.6.0
+matplotlib==3.11.1
