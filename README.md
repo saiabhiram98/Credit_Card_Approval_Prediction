@@ -1,6 +1,14 @@
 # Credit Risk Decisioning Service
 
-A credit card default prediction system built to support an approval decision — not just classify applicants, but weigh the cost of a missed default against the cost of a wrongly rejected applicant, and deploy that decision as a scoring API with an interactive UI.
+### ▶ [Try the live demo](https://credit-risk-decisioning.streamlit.app/)
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://credit-risk-decisioning.streamlit.app/)
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![XGBoost](https://img.shields.io/badge/Model-XGBoost-EB0B1A)](https://xgboost.readthedocs.io/)
+
+A credit card default prediction system built to support an approval decision — not just classify applicants, but weigh the cost of a missed default against the cost of a wrongly rejected applicant, and serve that decision through a scoring API and an interactive UI.
+
+Enter an applicant's details in the [live app](https://credit-risk-decisioning.streamlit.app/) and it returns a risk score, an approve/reject decision at a cost-optimized threshold, and the SHAP drivers explaining that specific score.
 
 ## Problem Framing
 
@@ -44,22 +52,32 @@ Five models are benchmarked: Logistic Regression and Decision Tree as baselines,
 SHAP (TreeExplainer) is used for both global feature importance and per-applicant explanations, so a rejected or flagged applicant's score can be traced back to specific contributing factors.
 
 **6. Deployment**
-The tuned XGBoost model is served through a FastAPI backend that replicates the full preprocessing pipeline (encoding, scaling) and returns a risk score, approve/reject decision, and top SHAP drivers. A Streamlit frontend provides a form-based UI on top of the API.
+Artifact loading, preprocessing, and the threshold decision live in a single shared module (`scoring.py`), which two independent interfaces sit on top of — a FastAPI service and a Streamlit UI. Neither can drift from the other, and either can be deployed alone. The [public demo](https://credit-risk-decisioning.streamlit.app/) runs the Streamlit interface.
+
+```
+streamlit_app.py ─┐
+                  ├─> scoring.py ─> XGBoost + StandardScaler + SHAP explainer
+main.py (FastAPI)─┘
+```
+
+The decision threshold is loaded from a training artifact rather than hardcoded, so it cannot fall out of sync with the model it was chosen for.
 
 ## Repository Structure
 
 ```
 .
 ├── Credit_Card_Approval_Prediction_Production.ipynb   # full pipeline: EDA, leakage fix, modeling, cost analysis, SHAP
+├── requirements.txt         # deployment deps (Streamlit Community Cloud)
 ├── data/
 │   ├── application_record.csv
 │   └── credit_record.csv
 └── credit_risk_api/
-    ├── main.py              # FastAPI app (/predict, /threshold endpoints)
+    ├── scoring.py           # shared core: artifacts, scoring, decision logic
+    ├── streamlit_app.py     # Streamlit UI (the deployed app)
+    ├── main.py              # FastAPI service (/predict, /threshold)
     ├── schemas.py           # Pydantic request/response models
     ├── preprocess.py        # preprocessing pipeline (mirrors the notebook)
-    ├── streamlit_app.py     # Streamlit UI, calls the FastAPI backend
-    ├── requirements.txt
+    ├── requirements.txt     # local deps for running both interfaces
     └── models/
         ├── xgb_model.pkl
         ├── scaler.pkl
@@ -68,29 +86,27 @@ The tuned XGBoost model is served through a FastAPI backend that replicates the 
         └── decision_threshold.pkl
 ```
 
-## Running the App
+## Running Locally
 
-Install dependencies:
+The [hosted demo](https://credit-risk-decisioning.streamlit.app/) needs no setup. To run it yourself:
 
 ```bash
 pip install -r credit_risk_api/requirements.txt
 ```
 
-Start the FastAPI backend (from `credit_risk_api/`):
-
-```bash
-uvicorn main:app --reload
-```
-
-API docs available at `http://localhost:8000/docs`.
-
-In a second terminal, start the Streamlit UI:
+**Streamlit UI** — scores in-process, no backend required:
 
 ```bash
 streamlit run credit_risk_api/streamlit_app.py
 ```
 
-Opens at `http://localhost:8501`. Fill in the applicant form and submit to get a risk score, approve/reject decision, and SHAP-based explanation.
+**FastAPI service** — the same scoring logic over HTTP (run from `credit_risk_api/`):
+
+```bash
+uvicorn main:app --reload
+```
+
+Interactive API docs at `http://localhost:8000/docs`.
 
 ## Dataset
 
